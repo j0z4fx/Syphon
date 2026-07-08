@@ -3,6 +3,7 @@
 local Env = require('core/env')
 
 local UserInputService = game:GetService('UserInputService')
+local Players = game:GetService('Players')
 
 local TOOLBAR_HEIGHT = 43 -- odd => true vertical center pixel
 
@@ -59,6 +60,20 @@ local function Window(props)
             Size = UDim2.new(1, 0, 0, TOOLBAR_HEIGHT),
             BackgroundColor3 = Theme.Color.Surface,
             BorderSizePixel = 0,
+        }, {
+            Avatar = React.createElement('ImageLabel', {
+                AnchorPoint = Vector2.new(0, 0.5),
+                Position = UDim2.new(0, 8, 0.5, 0),
+                Size = UDim2.fromOffset(29, 29),
+                BackgroundColor3 = Theme.Color.Background,
+                BorderSizePixel = 0,
+                Image = ('rbxthumb://type=AvatarHeadShot&id=%d&w=48&h=48')
+                    :format(Players.LocalPlayer.UserId),
+            }, {
+                Round = React.createElement('UICorner', {
+                    CornerRadius = UDim.new(0.5, 0),
+                }),
+            }),
         }),
     })
 end
