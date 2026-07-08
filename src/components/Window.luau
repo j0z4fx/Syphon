@@ -79,14 +79,15 @@ local function Window(props)
         BorderSizePixel = 0,
         ClipsDescendants = true,
         Visible = props.Visible ~= false,
-        [React.Event.InputBegan] = onInput,
     }, {
         Corner = React.createElement('UICorner', {
             CornerRadius = UDim.new(0, Theme.Layout.Corner),
         }),
+        -- drag handle = content area only; toolbar stays inert
         Content = React.createElement('Frame', {
             Size = UDim2.new(1, 0, 1, -TOOLBAR_HEIGHT),
             BackgroundTransparency = 1,
+            [React.Event.InputBegan] = onInput,
         }, props.children),
         Toolbar = React.createElement('Frame', {
             AnchorPoint = Vector2.new(0, 1),
@@ -94,7 +95,6 @@ local function Window(props)
             Size = UDim2.new(1, 0, 0, TOOLBAR_HEIGHT),
             BackgroundColor3 = Theme.Color.Surface,
             BorderSizePixel = 0,
-            Active = true, -- sink input so the toolbar is not a drag handle
         }, {
             -- round bottom corners to match window; square off the top edge so
             -- the top two corners stay flush against the window body
