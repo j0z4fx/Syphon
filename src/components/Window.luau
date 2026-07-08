@@ -96,6 +96,16 @@ local function Window(props)
             BorderSizePixel = 0,
             Active = true, -- sink input so the toolbar is not a drag handle
         }, {
+            -- round bottom corners to match window; square off the top edge so
+            -- the top two corners stay flush against the window body
+            Corner = React.createElement('UICorner', {
+                CornerRadius = UDim.new(0, Theme.Layout.Corner),
+            }),
+            TopSquare = React.createElement('Frame', {
+                Size = UDim2.new(1, 0, 0, Theme.Layout.Corner),
+                BackgroundColor3 = Theme.Color.Surface,
+                BorderSizePixel = 0,
+            }),
             Avatar = React.createElement('Frame', {
                 AnchorPoint = Vector2.new(0, 0.5),
                 Position = UDim2.new(0, 8, 0.5, 0),
