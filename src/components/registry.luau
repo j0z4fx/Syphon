@@ -4,6 +4,7 @@
 -- `kind` groups them ('layout' for structural, 'control' for inputs) so tooling
 -- and a future auto-builder can iterate them.
 return {
+    { name = 'RoundedFrame', path = 'components/RoundedFrame',     kind = 'layout'  },
     { name = 'Window',      path = 'components/Window',            kind = 'layout'  },
     { name = 'TabButton',   path = 'components/TabButton',         kind = 'layout'  },
     { name = 'Tab',         path = 'components/Tab',               kind = 'layout'  },

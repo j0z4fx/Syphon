@@ -1,14 +1,18 @@
 --!nonstrict
--- Divider — horizontal separator. Scaffold: no UI yet.
+-- Divider — 1px horizontal separator.
 local Env = require('core/env')
 
--- props: {}
+-- props: { LayoutOrder: number? }
 local function Divider(props)
     local React = Env.React
     local Theme = Env.Theme
-    local Store = Env.Store
-    -- TODO: build element + wire value/state into Store under props.Flag.
-    return nil
+
+    return React.createElement('Frame', {
+        LayoutOrder = props.LayoutOrder,
+        Size = UDim2.new(1, 0, 0, 1),
+        BackgroundColor3 = Theme.Color.Outline,
+        BorderSizePixel = 0,
+    })
 end
 
 return Divider

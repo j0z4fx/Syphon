@@ -30,6 +30,15 @@ local function makeHost(name)
     return gui, container
 end
 
+-- Run a user callback without letting its errors kill the render.
+function Library:SafeCall(fn, ...)
+    if type(fn) ~= 'function' then return end
+    local ok, err = pcall(fn, ...)
+    if not ok then
+        warn('[Syphon] callback error: ' .. tostring(err))
+    end
+end
+
 -- Mount a React element and return its root handle.
 function Library:Mount(element, name)
     assert(Env.ReactRoblox, 'Syphon: ' .. (self.Runtime and self.Runtime.reason or 'no React runtime'))

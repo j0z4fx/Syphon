@@ -15,6 +15,8 @@ return {
     Color = {
         Background = Color3.fromRGB(20, 20, 20),
         Surface    = Color3.fromRGB(28, 28, 28),
+        Element    = Color3.fromRGB(38, 38, 38), -- controls resting on Surface
+        ElementDim = Color3.fromRGB(33, 33, 33), -- pressed / track state
         Outline    = Color3.fromRGB(50, 50, 50),
         Accent     = Color3.fromRGB(0, 85, 255),
         Text       = Color3.fromRGB(255, 255, 255),
@@ -32,6 +34,7 @@ return {
     Layout = {
         Padding   = 4,
         RowHeight = 20,
-        Corner    = 6, -- window + tab button corner radius (px)
+        Corner    = 6, -- window + groupbox corner radius (px)
+        CornerSm  = 4, -- controls nested inside groupboxes (concentric-ish)
     },
 }

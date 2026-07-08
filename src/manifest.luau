@@ -12,9 +12,11 @@ return {
     'core/Theme',
     'core/Store',
     'core/Icons',
+    'core/Corners',
     'core/Library',
 
     'components/registry',
+    'components/RoundedFrame',
     'components/Window',
     'components/TabButton',
     'components/Tab',

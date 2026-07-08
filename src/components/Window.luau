@@ -1,7 +1,9 @@
 --!nonstrict
--- Window — blank draggable frame. 16:9 (800x450 default).
+-- Window — draggable frame, 16:9 (800x450 default). Bottom toolbar hosts the
+-- avatar chip and centered tab buttons. Corners drawn by the corner engine.
 local Env = require('core/env')
 local TabButton = require('components/TabButton')
+local RoundedFrame = require('components/RoundedFrame')
 
 local UserInputService = game:GetService('UserInputService')
 local Players = game:GetService('Players')
@@ -21,12 +23,10 @@ local function Window(props)
     local Theme = Env.Theme
     local Icons = Env.Icons
 
-    local activeTab, setActiveTab = React.useState(#DEMO_TABS) -- default: Settings
-
+    local activeTab, setActiveTab = React.useState(1)
     local outerRef = React.useRef(nil)
 
-    -- ponytail: whole-surface drag while window is blank; move to a title strip when one exists
-    local onInput = React.useCallback(function(_, input)
+    local onDrag = React.useCallback(function(_, input)
         if input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
         local outer = outerRef.current
         if not outer then return end
@@ -75,32 +75,39 @@ local function Window(props)
         AnchorPoint = Vector2.new(0.5, 0.5),
         Position = props.Position or UDim2.fromScale(0.5, 0.5),
         Size = props.Size or UDim2.fromOffset(800, 450),
-        BackgroundColor3 = Theme.Color.Background,
-        BorderSizePixel = 0,
-        ClipsDescendants = true,
+        BackgroundTransparency = 1,
         Visible = props.Visible ~= false,
     }, {
-        Corner = React.createElement('UICorner', {
-            CornerRadius = UDim.new(0, Theme.Layout.Corner),
+        Bg = React.createElement(RoundedFrame, {
+            Color = Theme.Color.Background,
+            Size = UDim2.fromScale(1, 1),
         }),
-        -- drag handle = content area only; toolbar stays inert
         Content = React.createElement('Frame', {
             Size = UDim2.new(1, 0, 1, -TOOLBAR_HEIGHT),
             BackgroundTransparency = 1,
-            [React.Event.InputBegan] = onInput,
-        }, props.children),
-        Toolbar = React.createElement('Frame', {
+            ZIndex = 2,
+        }, {
+            -- empty space drags the window; controls sit on top and sink input
+            DragLayer = React.createElement('Frame', {
+                Size = UDim2.fromScale(1, 1),
+                BackgroundTransparency = 1,
+                ZIndex = 1,
+                [React.Event.InputBegan] = onDrag,
+            }),
+            Body = React.createElement('Frame', {
+                Size = UDim2.fromScale(1, 1),
+                BackgroundTransparency = 1,
+                ZIndex = 2,
+            }, props.children),
+        }),
+        Toolbar = React.createElement(RoundedFrame, {
+            Color = Theme.Color.Surface,
             AnchorPoint = Vector2.new(0, 1),
             Position = UDim2.fromScale(0, 1),
             Size = UDim2.new(1, 0, 0, TOOLBAR_HEIGHT),
-            BackgroundColor3 = Theme.Color.Surface,
-            BorderSizePixel = 0,
+            ZIndex = 2,
         }, {
-            -- round bottom corners to match window; square off the top edge so
-            -- the top two corners stay flush against the window body
-            Corner = React.createElement('UICorner', {
-                CornerRadius = UDim.new(0, Theme.Layout.Corner),
-            }),
+            -- square off the toolbar's top corners; bottom stays rounded
             TopSquare = React.createElement('Frame', {
                 Size = UDim2.new(1, 0, 0, Theme.Layout.Corner),
                 BackgroundColor3 = Theme.Color.Surface,
