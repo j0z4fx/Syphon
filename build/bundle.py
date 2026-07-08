@@ -8,7 +8,13 @@ import os, re, sys
 ROOT = os.path.abspath('.')
 
 RE_STR    = re.compile(r'require\(\s*["\']([^"\']+)["\']\s*\)')
-RE_SCRIPT = re.compile(r'require\(\s*script((?:\.Parent)+)\.([A-Za-z0-9_]+)\s*\)')
+# require(script.Parent.Foo), require(script.Parent["Foo.new"]), multi-line ok
+RE_SCRIPT = re.compile(
+    r'require\(\s*script('
+    r'(?:\s*\.\s*Parent\b|\s*\.\s*[A-Za-z_][A-Za-z0-9_]*|\s*\[\s*"[^"]+"\s*\]|\s*\[\s*\'[^\']+\'\s*\])+'
+    r')\s*\)', re.S)
+RE_SEG = re.compile(
+    r'\.\s*Parent\b|\.\s*([A-Za-z_][A-Za-z0-9_]*)|\[\s*"([^"]+)"\s*\]|\[\s*\'([^\']+)\'\s*\]')
 
 def read(p):
     with open(p, encoding='utf-8') as f:
@@ -33,11 +39,12 @@ def resolve_str(fromfile, req):
         return None
     return resolve_file(cand)
 
-def resolve_script(fromfile, parents, name):
-    d = os.path.dirname(fromfile)
-    for _ in range(parents - 1):
-        d = os.path.dirname(d)
-    return resolve_file(os.path.join(d, name))
+def resolve_script(fromfile, chain):
+    node = fromfile
+    for m in RE_SEG.finditer(chain):
+        name = m.group(1) or m.group(2) or m.group(3)
+        node = os.path.dirname(node) if name is None else os.path.join(node, name)
+    return resolve_file(node)
 
 def strip_comments(src):
     src = re.sub(r'--\[(=*)\[.*?\]\1\]', '', src, flags=re.S)   # block comments
@@ -52,7 +59,7 @@ def rewrite(fromfile, src):
         tgt = resolve_str(fromfile, m.group(1))
         return 'require("%s")' % modid(tgt) if tgt else m.group(0)
     def sub_script(m):
-        tgt = resolve_script(fromfile, m.group(1).count('.Parent'), m.group(2))
+        tgt = resolve_script(fromfile, m.group(1))
         return 'require("%s")' % modid(tgt) if tgt else m.group(0)
     src = RE_SCRIPT.sub(sub_script, src)
     src = RE_STR.sub(sub_str, src)
@@ -65,7 +72,7 @@ def deps(fromfile):
         t = resolve_str(fromfile, m.group(1))
         if t: found.add(t)
     for m in RE_SCRIPT.finditer(scan):
-        t = resolve_script(fromfile, m.group(1).count('.Parent'), m.group(2))
+        t = resolve_script(fromfile, m.group(1))
         if t: found.add(t)
     return found
 
