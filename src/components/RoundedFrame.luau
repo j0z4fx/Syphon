@@ -6,7 +6,7 @@ local Env = require('core/env')
 local Corners = require('core/Corners')
 
 -- props: { Color: Color3, Radius: number?, Transparency: number?, Button: boolean?,
---          OnClick: (() -> ())?, plus common layout props, children }
+--          OnClick: (() -> ())?, ref, Handlers: {[event]=fn}?, plus common layout props, children }
 local function RoundedFrame(props)
     local React = Env.React
     local Theme = Env.Theme
@@ -14,6 +14,7 @@ local function RoundedFrame(props)
     local slice = Corners.get(radius)
 
     local base = {
+        ref = props.ref,
         Size = props.Size,
         Position = props.Position,
         AnchorPoint = props.AnchorPoint,
@@ -24,6 +25,13 @@ local function RoundedFrame(props)
         Visible = props.Visible ~= false,
         Active = props.Active,
     }
+
+    -- caller-supplied event handlers (hover/press etc.)
+    if props.Handlers then
+        for event, fn in pairs(props.Handlers) do
+            base[event] = fn
+        end
+    end
 
     -- normalize children into a mutable table
     local kids = {}

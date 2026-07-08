@@ -4,6 +4,7 @@
 -- ponytail: single-select only; add Multi when something needs it
 local Env = require('core/env')
 local RoundedFrame = require('components/RoundedFrame')
+local Motion = require('core/Motion')
 
 local ROW = 24
 local MAX_ROWS = 4
@@ -20,6 +21,12 @@ local function Dropdown(props)
     local open, setOpen = React.useState(false)
     local valueRef = React.useRef(value)
     valueRef.current = value
+    local chevronRef = React.useRef(nil)
+
+    React.useEffect(function()
+        local c = chevronRef.current
+        if c then Motion.tween(c, Motion.Snappy, { Rotation = open and 180 or 0 }) end
+    end, { open })
 
     local set = React.useCallback(function(v)
         setValue(v)
@@ -95,13 +102,13 @@ local function Dropdown(props)
                 TextXAlignment = Enum.TextXAlignment.Left,
             }),
             Chevron = React.createElement('ImageLabel', {
+                ref = chevronRef,
                 AnchorPoint = Vector2.new(1, 0.5),
                 Position = UDim2.new(1, -6, 0.5, 0),
                 Size = UDim2.fromOffset(14, 14),
                 BackgroundTransparency = 1,
                 Image = Env.Icons.GetIcon('chevron-down'),
                 ImageColor3 = Theme.Color.TextMuted,
-                Rotation = open and 180 or 0,
             }),
         }),
         List = open and React.createElement(RoundedFrame, {

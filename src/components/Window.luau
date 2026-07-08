@@ -4,11 +4,49 @@
 local Env = require('core/env')
 local TabButton = require('components/TabButton')
 local RoundedFrame = require('components/RoundedFrame')
+local Motion = require('core/Motion')
 
 local UserInputService = game:GetService('UserInputService')
 local Players = game:GetService('Players')
 
 local TOOLBAR_HEIGHT = 43 -- odd => true vertical center pixel
+
+-- one page per tab; crossfades + slides on activate, stays mounted when hidden
+local function TabPage(props)
+    local React = Env.React
+    local ref = React.useRef(nil)
+
+    React.useEffect(function()
+        local cg = ref.current
+        if not cg then return end
+        if props.active then
+            cg.Visible = true
+            Motion.tween(cg, Motion.Smooth, {
+                GroupTransparency = 0,
+                Position = UDim2.fromOffset(0, 0),
+            })
+        else
+            local t = Motion.tween(cg, Motion.Snappy, {
+                GroupTransparency = 1,
+                Position = UDim2.fromOffset(0, 8),
+            })
+            if t then
+                t.Completed:Once(function()
+                    if cg and cg.GroupTransparency >= 1 then cg.Visible = false end
+                end)
+            end
+        end
+    end, { props.active })
+
+    return React.createElement('CanvasGroup', {
+        ref = ref,
+        Size = UDim2.fromScale(1, 1),
+        BackgroundTransparency = 1,
+        BorderSizePixel = 0,
+        GroupTransparency = props.active and 0 or 1,
+        Visible = props.active,
+    }, props.children)
+end
 
 -- props: { Size: UDim2?, Position: UDim2?, Visible: boolean?,
 --          Tabs: { { Name: string, Icon: string, Content: ReactElement? } }?, children: ... }
@@ -19,6 +57,13 @@ local function Window(props)
 
     local activeTab, setActiveTab = React.useState(1)
     local outerRef = React.useRef(nil)
+    local scaleRef = React.useRef(nil)
+
+    -- mount pop: scale + fade in
+    React.useEffect(function()
+        local s = scaleRef.current
+        if s then Motion.tween(s, Motion.Pop, { Scale = 1 }) end
+    end, {})
 
     local onDrag = React.useCallback(function(_, input)
         if input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
@@ -66,10 +111,8 @@ local function Window(props)
             Active = activeTab == i,
             OnClick = function() setActiveTab(i) end,
         })
-        pages[tab.Name] = React.createElement('Frame', {
-            Size = UDim2.fromScale(1, 1),
-            BackgroundTransparency = 1,
-            Visible = activeTab == i,
+        pages[tab.Name] = React.createElement(TabPage, {
+            active = activeTab == i,
         }, tab.Content)
     end
 
@@ -81,6 +124,7 @@ local function Window(props)
         BackgroundTransparency = 1,
         Visible = props.Visible ~= false,
     }, {
+        Scale = React.createElement('UIScale', { ref = scaleRef, Scale = 0.94 }),
         Bg = React.createElement(RoundedFrame, {
             Color = Theme.Color.Background,
             Size = UDim2.fromScale(1, 1),
