@@ -1,7 +1,6 @@
 --!nonstrict
 -- Slider — numeric drag slider; registers into Store.Options under props.Flag.
 local Env = require('core/env')
-local RoundedFrame = require('components/RoundedFrame')
 
 local UserInputService = game:GetService('UserInputService')
 
@@ -100,26 +99,22 @@ local function Slider(props)
                 if io.UserInputType == Enum.UserInputType.MouseButton1 then beginDrag() end
             end,
         }, {
-            Track = React.createElement(RoundedFrame, {
-                Color = Theme.Color.Element,
-                Radius = 3,
+            -- CanvasGroup masks the square fill to the track's rounded shape,
+            -- so corners stay crisp however small the fill gets
+            Track = React.createElement('CanvasGroup', {
+                ref = barRef,
                 AnchorPoint = Vector2.new(0, 0.5),
                 Position = UDim2.fromScale(0, 0.5),
                 Size = UDim2.new(1, 0, 0, 6),
+                BackgroundColor3 = Theme.Color.Element,
+                BorderSizePixel = 0,
             }, {
-                FillRef = React.createElement('Frame', { -- measurement anchor for drag math
-                    Size = UDim2.fromScale(1, 1),
-                    BackgroundTransparency = 1,
-                    ref = barRef,
+                Round = React.createElement('UICorner', { CornerRadius = UDim.new(0, 3) }),
+                Fill = React.createElement('Frame', {
+                    Size = UDim2.new(frac, 0, 1, 0),
+                    BackgroundColor3 = Theme.Color.Accent,
+                    BorderSizePixel = 0,
                 }),
-            }),
-            Fill = React.createElement(RoundedFrame, {
-                Color = Theme.Color.Accent,
-                Radius = 3,
-                AnchorPoint = Vector2.new(0, 0.5),
-                Position = UDim2.fromScale(0, 0.5),
-                Size = UDim2.new(frac, 0, 0, 6),
-                ZIndex = 2,
             }),
         }),
     })

@@ -4,27 +4,41 @@
 -- mount/unmount lifecycle and holds the resolved component + runtime tables.
 local Env = require('core/env')
 
+local cloneref = cloneref or clonereference or function(x) return x end
+
 local Library = {
     _name  = 'Syphon',
     _roots = {}, -- { root = ReactRoot, gui = ScreenGui }
 }
 
+-- Random instance names so the gui doesn't grep as "Syphon" (NeverLose-style).
+function Library.RandomString()
+    local s = ''
+    for _ = 1, math.random(8, 14) do
+        s ..= string.char(math.random(97, 122))
+    end
+    return s
+end
+
 -- Create a protected ScreenGui + inner container the renderer can fully own
 -- (react-lua takes ownership of the instance handed to createRoot).
-local function makeHost(name)
+local function makeHost()
     local gui = Instance.new('ScreenGui')
-    gui.Name = name or 'Syphon'
+    gui.Name = Library.RandomString()
     gui.ResetOnSpawn = false
     gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    gui.IgnoreGuiInset = true -- gui coords == GetMouseLocation coords everywhere
 
     pcall(function()
         if syn and syn.protect_gui then syn.protect_gui(gui) end
         if protectgui then protectgui(gui) end
     end)
-    gui.Parent = (gethui and gethui()) or game:GetService('CoreGui')
+    gui.Parent = (gethui and gethui())
+        or (get_hidden_gui and get_hidden_gui())
+        or cloneref(game:GetService('CoreGui'))
 
     local container = Instance.new('Folder')
-    container.Name = 'Root'
+    container.Name = Library.RandomString()
     container.Parent = gui
 
     return gui, container
@@ -43,7 +57,7 @@ end
 function Library:Mount(element, name)
     assert(Env.ReactRoblox, 'Syphon: ' .. (self.Runtime and self.Runtime.reason or 'no React runtime'))
 
-    local gui, container = makeHost(name)
+    local gui, container = makeHost()
     local root = Env.ReactRoblox.createRoot(container)
     root:render(element)
 

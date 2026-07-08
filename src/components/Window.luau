@@ -10,14 +10,8 @@ local Players = game:GetService('Players')
 
 local TOOLBAR_HEIGHT = 43 -- odd => true vertical center pixel
 
--- ponytail: demo tabs until Tab wiring lands; last must be settings
-local DEMO_TABS = {
-    { name = 'Home',     icon = 'house' },
-    { name = 'Players',  icon = 'users' },
-    { name = 'Settings', icon = 'settings' },
-}
-
--- props: { Size: UDim2?, Position: UDim2?, Visible: boolean?, children: ... }
+-- props: { Size: UDim2?, Position: UDim2?, Visible: boolean?,
+--          Tabs: { { Name: string, Icon: string, Content: ReactElement? } }?, children: ... }
 local function Window(props)
     local React = Env.React
     local Theme = Env.Theme
@@ -51,6 +45,8 @@ local function Window(props)
         end)
     end, {})
 
+    local tabs = props.Tabs or {}
+
     -- centered row of square icon tab buttons
     local tabChildren = {
         Layout = React.createElement('UIListLayout', {
@@ -61,13 +57,20 @@ local function Window(props)
             SortOrder = Enum.SortOrder.LayoutOrder,
         }),
     }
-    for i, tab in ipairs(DEMO_TABS) do
-        tabChildren[tab.name] = React.createElement(TabButton, {
+    -- one page per tab; only the active one is visible
+    local pages = {}
+    for i, tab in ipairs(tabs) do
+        tabChildren[tab.Name] = React.createElement(TabButton, {
             LayoutOrder = i,
-            Image = Icons.GetIcon(tab.icon),
+            Image = Icons.GetIcon(tab.Icon),
             Active = activeTab == i,
             OnClick = function() setActiveTab(i) end,
         })
+        pages[tab.Name] = React.createElement('Frame', {
+            Size = UDim2.fromScale(1, 1),
+            BackgroundTransparency = 1,
+            Visible = activeTab == i,
+        }, tab.Content)
     end
 
     return React.createElement('Frame', {
@@ -98,7 +101,7 @@ local function Window(props)
                 Size = UDim2.fromScale(1, 1),
                 BackgroundTransparency = 1,
                 ZIndex = 2,
-            }, props.children),
+            }, next(pages) and pages or props.children),
         }),
         Toolbar = React.createElement(RoundedFrame, {
             Color = Theme.Color.Surface,

@@ -13,6 +13,7 @@ return {
     'core/Store',
     'core/Icons',
     'core/Corners',
+    'core/Motion',
     'core/Library',
 
     'components/registry',

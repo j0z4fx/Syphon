@@ -1,7 +1,9 @@
 --!nonstrict
--- Toggle — on/off row; registers into Store.Toggles under props.Flag.
+-- Toggle — NeverLose-style animated pill switch (30x18, sliding knob).
+-- Registers into Store.Toggles under props.Flag.
 local Env = require('core/env')
-local RoundedFrame = require('components/RoundedFrame')
+local Motion = require('core/Motion')
+local Corners = require('core/Corners')
 
 -- props: { Text: string, Default: boolean?, Flag: string?, Callback: (boolean) -> ()?, LayoutOrder: number? }
 local function Toggle(props)
@@ -12,6 +14,8 @@ local function Toggle(props)
     local value, setValue = React.useState(props.Default or false)
     local valueRef = React.useRef(value)
     valueRef.current = value
+    local pillRef = React.useRef(nil)
+    local knobRef = React.useRef(nil)
 
     local set = React.useCallback(function(v)
         v = not not v
@@ -30,6 +34,74 @@ local function Toggle(props)
         return function() Store.Toggles[props.Flag] = nil end
     end, {})
 
+    -- NeverLose anim: pill tint + knob slide/opacity, Slowy (0.175s)
+    React.useEffect(function()
+        local pill, knob = pillRef.current, knobRef.current
+        if not (pill and knob) then return end
+        local prop = pill:IsA('ImageLabel') and 'ImageColor3' or 'BackgroundColor3'
+        Motion.tween(pill, Motion.Slowy, {
+            [prop] = value and Theme.Color.Accent or Theme.Color.Element,
+        })
+        local kprop = knob:IsA('ImageLabel') and 'ImageTransparency' or 'BackgroundTransparency'
+        Motion.tween(knob, Motion.Slowy, {
+            Position = value and UDim2.new(0.7, 0, 0.5, 0) or UDim2.new(0.3, 0, 0.5, 0),
+            [kprop] = value and 0 or 0.5,
+        })
+    end, { value })
+
+    local pillSlice = Corners.get(9)
+    local knobSlice = Corners.get(7)
+
+    local pill
+    if pillSlice then
+        pill = React.createElement('ImageLabel', {
+            ref = pillRef,
+            AnchorPoint = Vector2.new(1, 0.5),
+            Position = UDim2.new(1, 0, 0.5, 0),
+            Size = UDim2.fromOffset(30, 18),
+            BackgroundTransparency = 1,
+            ImageContent = pillSlice.ImageContent,
+            ScaleType = Enum.ScaleType.Slice,
+            SliceCenter = pillSlice.SliceCenter,
+            ImageColor3 = (props.Default and Theme.Color.Accent) or Theme.Color.Element,
+        }, {
+            Knob = React.createElement('ImageLabel', {
+                ref = knobRef,
+                AnchorPoint = Vector2.new(0.5, 0.5),
+                Position = (props.Default and UDim2.new(0.7, 0, 0.5, 0)) or UDim2.new(0.3, 0, 0.5, 0),
+                Size = UDim2.fromOffset(14, 14),
+                BackgroundTransparency = 1,
+                ImageContent = knobSlice and knobSlice.ImageContent,
+                ScaleType = Enum.ScaleType.Slice,
+                SliceCenter = knobSlice and knobSlice.SliceCenter,
+                ImageColor3 = Color3.new(1, 1, 1),
+                ImageTransparency = props.Default and 0 or 0.5,
+            }),
+        })
+    else -- no corner engine: UICorner fallback
+        pill = React.createElement('Frame', {
+            ref = pillRef,
+            AnchorPoint = Vector2.new(1, 0.5),
+            Position = UDim2.new(1, 0, 0.5, 0),
+            Size = UDim2.fromOffset(30, 18),
+            BackgroundColor3 = (props.Default and Theme.Color.Accent) or Theme.Color.Element,
+            BorderSizePixel = 0,
+        }, {
+            Round = React.createElement('UICorner', { CornerRadius = UDim.new(1, 0) }),
+            Knob = React.createElement('Frame', {
+                ref = knobRef,
+                AnchorPoint = Vector2.new(0.5, 0.5),
+                Position = (props.Default and UDim2.new(0.7, 0, 0.5, 0)) or UDim2.new(0.3, 0, 0.5, 0),
+                Size = UDim2.fromOffset(14, 14),
+                BackgroundColor3 = Color3.new(1, 1, 1),
+                BackgroundTransparency = props.Default and 0 or 0.5,
+                BorderSizePixel = 0,
+            }, {
+                Round = React.createElement('UICorner', { CornerRadius = UDim.new(1, 0) }),
+            }),
+        })
+    end
+
     return React.createElement('TextButton', {
         LayoutOrder = props.LayoutOrder,
         Size = UDim2.new(1, 0, 0, 22),
@@ -37,26 +109,8 @@ local function Toggle(props)
         Text = '',
         [React.Event.Activated] = function() set(not valueRef.current) end,
     }, {
-        Box = React.createElement(RoundedFrame, {
-            Color = value and Theme.Color.Accent or Theme.Color.Element,
-            Radius = Theme.Layout.CornerSm,
-            Size = UDim2.fromOffset(16, 16),
-            Position = UDim2.new(0, 0, 0.5, 0),
-            AnchorPoint = Vector2.new(0, 0.5),
-        }, {
-            Check = React.createElement('ImageLabel', {
-                AnchorPoint = Vector2.new(0.5, 0.5),
-                Position = UDim2.fromScale(0.5, 0.5),
-                Size = UDim2.fromOffset(12, 12),
-                BackgroundTransparency = 1,
-                Image = Env.Icons.GetIcon('check'),
-                ImageColor3 = Theme.Color.Background,
-                ImageTransparency = value and 0 or 1,
-            }),
-        }),
         Text = React.createElement('TextLabel', {
-            Position = UDim2.fromOffset(24, 0),
-            Size = UDim2.new(1, -24, 1, 0),
+            Size = UDim2.new(1, -38, 1, 0),
             BackgroundTransparency = 1,
             FontFace = Theme.Face.Regular,
             Text = props.Text or 'Toggle',
@@ -64,6 +118,7 @@ local function Toggle(props)
             TextSize = Theme.Text.SizeSml,
             TextXAlignment = Enum.TextXAlignment.Left,
         }),
+        Pill = pill,
     })
 end
 

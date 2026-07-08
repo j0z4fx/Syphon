@@ -6,7 +6,7 @@ local PAD = 8
 
 local function column(React, order, children)
     return React.createElement('ScrollingFrame', {
-        Size = UDim2.new(1 / 3, -11, 1, 0),
+        Size = UDim2.new(0, 0, 1, 0), -- width comes from the list layout's flex fill
         LayoutOrder = order,
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
@@ -48,6 +48,7 @@ local function Tab(props)
             FillDirection = Enum.FillDirection.Horizontal,
             SortOrder = Enum.SortOrder.LayoutOrder,
             Padding = UDim.new(0, PAD),
+            HorizontalFlex = Enum.UIFlexAlignment.Fill, -- equal column widths, exact gutters
         }),
         Col1 = column(React, 1, props.Column1),
         Col2 = column(React, 2, props.Column2),

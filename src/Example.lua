@@ -5,7 +5,8 @@ local Syphon = loadstring(game:HttpGet(
 
 -- warm the icon set before mounting (first fetch yields; render must not)
 Syphon.Icons.GetIcon('house')
-Syphon.Icons.GetIcon('check')
+Syphon.Icons.GetIcon('users')
+Syphon.Icons.GetIcon('settings')
 Syphon.Icons.GetIcon('chevron-down')
 
 local React = Syphon.React
@@ -81,6 +82,28 @@ local demoTab = e(C.Tab, {
     },
 })
 
-local handle = Syphon:Mount(e(C.Window, nil, { Demo = demoTab }), 'SyphonDemo')
+local playersTab = e(C.Tab, {
+    Column1 = {
+        Info = e(C.Groupbox, { Name = 'Players', LayoutOrder = 1 }, {
+            Note = e(C.Label, { LayoutOrder = 1, Text = 'Player tools land here.', Muted = true }),
+        }),
+    },
+})
+
+local settingsTab = e(C.Tab, {
+    Column1 = {
+        Config = e(C.Groupbox, { Name = 'Settings', LayoutOrder = 1 }, {
+            Note = e(C.Label, { LayoutOrder = 1, Text = 'Library settings land here.', Muted = true }),
+        }),
+    },
+})
+
+local handle = Syphon:Mount(e(C.Window, {
+    Tabs = {
+        { Name = 'Home',     Icon = 'house',    Content = demoTab },
+        { Name = 'Players',  Icon = 'users',    Content = playersTab },
+        { Name = 'Settings', Icon = 'settings', Content = settingsTab },
+    },
+}), 'SyphonDemo')
 getgenv().SyphonHandle = handle
 print('[Syphon] demo mounted')
