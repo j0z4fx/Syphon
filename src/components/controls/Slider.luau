@@ -1,8 +1,9 @@
 --!nonstrict
--- Slider — numeric drag slider; registers into Store.Options under props.Flag.
+-- Slider — numeric drag slider; fill + hover animate. Registers into Store.Options.
 local Env = require('core/env')
-
-local UserInputService = game:GetService('UserInputService')
+local Drag = require('core/Drag')
+local Motion = require('core/Motion')
+local Hooks = require('core/Hooks')
 
 -- props: { Text: string, Min: number, Max: number, Default: number?, Rounding: number?,
 --          Suffix: string?, Flag: string?, Callback: (number) -> ()?, LayoutOrder: number? }
@@ -23,6 +24,10 @@ local function Slider(props)
     local valueRef = React.useRef(value)
     valueRef.current = value
     local barRef = React.useRef(nil)
+    local fillRef = React.useRef(nil)
+    local dragging = React.useRef(false)
+
+    local hovered, _, handlers = Hooks.useInteractive()
 
     local set = React.useCallback(function(v)
         v = round(math.clamp(tonumber(v) or min, min, max))
@@ -41,27 +46,30 @@ local function Slider(props)
         return function() Store.Options[props.Flag] = nil end
     end, {})
 
-    local function beginDrag()
-        local bar = barRef.current
-        if not bar then return end
-        local function apply()
-            local m = UserInputService:GetMouseLocation()
-            local frac = math.clamp((m.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
-            set(min + (max - min) * frac)
-        end
-        apply()
-        local moveConn, upConn
-        moveConn = UserInputService.InputChanged:Connect(function(io)
-            if io.UserInputType == Enum.UserInputType.MouseMovement then apply() end
-        end)
-        upConn = UserInputService.InputEnded:Connect(function(io)
-            if io.UserInputType == Enum.UserInputType.MouseButton1 then
-                moveConn:Disconnect(); upConn:Disconnect()
-            end
-        end)
-    end
-
     local frac = (max > min) and (value - min) / (max - min) or 0
+
+    -- lerp the fill toward the value; instant while actively dragging so the
+    -- bar tracks the cursor, tweened otherwise (SetValue / clicks)
+    React.useEffect(function()
+        local fill = fillRef.current
+        if not fill then return end
+        local target = UDim2.new(frac, 0, 1, 0)
+        if dragging.current then
+            fill.Size = target
+        else
+            Motion.tween(fill, Motion.Manual, { Size = target })
+        end
+    end, { frac })
+
+    -- hover: brighten the track
+    React.useEffect(function()
+        local bar = barRef.current
+        if bar then
+            Motion.tween(bar, Motion.Snappy, {
+                BackgroundColor3 = hovered and Theme.Color.Outline or Theme.Color.Element,
+            })
+        end
+    end, { hovered })
 
     return React.createElement('Frame', {
         LayoutOrder = props.LayoutOrder,
@@ -95,12 +103,30 @@ local function Slider(props)
             Size = UDim2.new(1, 0, 0, 16),
             BackgroundTransparency = 1,
             Text = '',
+            [React.Event.MouseEnter] = handlers[React.Event.MouseEnter],
+            [React.Event.MouseLeave] = handlers[React.Event.MouseLeave],
             [React.Event.InputBegan] = function(_, io)
-                if io.UserInputType == Enum.UserInputType.MouseButton1 then beginDrag() end
+                if io.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
+                local bar = barRef.current
+                if not bar then return end
+                dragging.current = true
+                Drag.begin(bar, function(f)
+                    if fillRef.current then fillRef.current.Size = UDim2.new(f.X, 0, 1, 0) end
+                    set(min + (max - min) * f.X)
+                end)
+                task.delay(0, function()
+                    -- clear the drag flag once the button releases
+                    local conn
+                    conn = game:GetService('UserInputService').InputEnded:Connect(function(io2)
+                        if io2.UserInputType == Enum.UserInputType.MouseButton1 then
+                            dragging.current = false
+                            conn:Disconnect()
+                        end
+                    end)
+                end)
             end,
         }, {
-            -- CanvasGroup masks the square fill to the track's rounded shape,
-            -- so corners stay crisp however small the fill gets
+            -- CanvasGroup masks the square fill to the track's rounded shape
             Track = React.createElement('CanvasGroup', {
                 ref = barRef,
                 AnchorPoint = Vector2.new(0, 0.5),
@@ -111,6 +137,7 @@ local function Slider(props)
             }, {
                 Round = React.createElement('UICorner', { CornerRadius = UDim.new(0, 3) }),
                 Fill = React.createElement('Frame', {
+                    ref = fillRef,
                     Size = UDim2.new(frac, 0, 1, 0),
                     BackgroundColor3 = Theme.Color.Accent,
                     BorderSizePixel = 0,

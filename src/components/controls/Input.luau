@@ -2,6 +2,8 @@
 -- Input — labeled text box; registers into Store.Options under props.Flag.
 local Env = require('core/env')
 local RoundedFrame = require('components/RoundedFrame')
+local Motion = require('core/Motion')
+local Hooks = require('core/Hooks')
 
 -- props: { Text: string, Default: string?, Placeholder: string?, Numeric: boolean?,
 --          Flag: string?, Callback: (string) -> ()?, LayoutOrder: number? }
@@ -14,6 +16,18 @@ local function Input(props)
     local valueRef = React.useRef(value)
     valueRef.current = value
     local boxRef = React.useRef(nil)
+    local bgRef = React.useRef(nil)
+    local focused = React.useRef(false)
+    local hovered, _, handlers = Hooks.useInteractive()
+
+    React.useEffect(function()
+        local bg = bgRef.current
+        if not bg then return end
+        local prop = bg:IsA('ImageLabel') and 'ImageColor3' or 'BackgroundColor3'
+        Motion.tween(bg, Motion.Snappy, {
+            [prop] = (hovered or focused.current) and Theme.Color.Outline or Theme.Color.Element,
+        })
+    end, { hovered })
 
     local set = React.useCallback(function(v)
         v = tostring(v)
@@ -52,11 +66,13 @@ local function Input(props)
             TextXAlignment = Enum.TextXAlignment.Left,
         }),
         BoxBg = React.createElement(RoundedFrame, {
+            ref = bgRef,
             Color = Theme.Color.Element,
             Radius = Theme.Layout.CornerSm,
             AnchorPoint = Vector2.new(0, 1),
             Position = UDim2.fromScale(0, 1),
             Size = UDim2.new(1, 0, 0, 26),
+            Handlers = handlers,
         }, {
             Box = React.createElement('TextBox', {
                 ref = boxRef,
@@ -72,7 +88,17 @@ local function Input(props)
                 TextXAlignment = Enum.TextXAlignment.Left,
                 ClearTextOnFocus = false,
                 ClipsDescendants = true,
+                [React.Event.Focused] = function()
+                    focused.current = true
+                    if bgRef.current then
+                        Motion.tween(bgRef.current, Motion.Snappy, { ImageColor3 = Theme.Color.Outline })
+                    end
+                end,
                 [React.Event.FocusLost] = function(rbx)
+                    focused.current = false
+                    if bgRef.current then
+                        Motion.tween(bgRef.current, Motion.Snappy, { ImageColor3 = Theme.Color.Element })
+                    end
                     set(rbx.Text)
                 end,
             }),

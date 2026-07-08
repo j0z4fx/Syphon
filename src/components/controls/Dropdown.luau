@@ -1,10 +1,11 @@
 --!nonstrict
--- Dropdown — single-select list that expands in place.
+-- Dropdown — single-select list that animates open/closed in place.
 -- Registers into Store.Options under props.Flag.
 -- ponytail: single-select only; add Multi when something needs it
 local Env = require('core/env')
 local RoundedFrame = require('components/RoundedFrame')
 local Motion = require('core/Motion')
+local Hooks = require('core/Hooks')
 
 local ROW = 24
 local MAX_ROWS = 4
@@ -21,12 +22,45 @@ local function Dropdown(props)
     local open, setOpen = React.useState(false)
     local valueRef = React.useRef(value)
     valueRef.current = value
-    local chevronRef = React.useRef(nil)
 
+    local rootRef = React.useRef(nil)
+    local listRef = React.useRef(nil)
+    local chevronRef = React.useRef(nil)
+    local boxRef = React.useRef(nil)
+
+    local hovered, _, handlers = Hooks.useInteractive()
+
+    local listH = math.min(#values, MAX_ROWS) * ROW
+
+    -- animate: chevron spin, list clip height + fade, whole-control height
     React.useEffect(function()
         local c = chevronRef.current
         if c then Motion.tween(c, Motion.Snappy, { Rotation = open and 180 or 0 }) end
+
+        local list = listRef.current
+        if list then
+            Motion.tween(list, Motion.Smooth, {
+                Size = UDim2.new(1, 0, 0, open and listH or 0),
+                GroupTransparency = open and 0 or 1,
+            })
+        end
+        local root = rootRef.current
+        if root then
+            Motion.tween(root, Motion.Smooth, {
+                Size = UDim2.new(1, 0, 0, 44 + (open and listH + 4 or 0)),
+            })
+        end
     end, { open })
+
+    React.useEffect(function()
+        local box = boxRef.current
+        if box then
+            local prop = box:IsA('ImageLabel') and 'ImageColor3' or 'BackgroundColor3'
+            Motion.tween(box, Motion.Snappy, {
+                [prop] = hovered and Theme.Color.Outline or Theme.Color.Element,
+            })
+        end
+    end, { hovered })
 
     local set = React.useCallback(function(v)
         setValue(v)
@@ -44,9 +78,6 @@ local function Dropdown(props)
         }
         return function() Store.Options[props.Flag] = nil end
     end, {})
-
-    local listH = math.min(#values, MAX_ROWS) * ROW
-    local height = 44 + (open and listH + 4 or 0)
 
     local rows = {
         Layout = React.createElement('UIListLayout', {
@@ -69,9 +100,11 @@ local function Dropdown(props)
     end
 
     return React.createElement('Frame', {
+        ref = rootRef,
         LayoutOrder = props.LayoutOrder,
-        Size = UDim2.new(1, 0, 0, height),
+        Size = UDim2.new(1, 0, 0, 44),
         BackgroundTransparency = 1,
+        ClipsDescendants = true,
         Active = true,
     }, {
         Text = React.createElement('TextLabel', {
@@ -84,11 +117,13 @@ local function Dropdown(props)
             TextXAlignment = Enum.TextXAlignment.Left,
         }),
         Box = React.createElement(RoundedFrame, {
+            ref = boxRef,
             Button = true,
             Color = Theme.Color.Element,
             Radius = Theme.Layout.CornerSm,
             Position = UDim2.fromOffset(0, 18),
             Size = UDim2.new(1, 0, 0, 26),
+            Handlers = handlers,
             OnClick = function() setOpen(not open) end,
         }, {
             Current = React.createElement('TextLabel', {
@@ -111,12 +146,18 @@ local function Dropdown(props)
                 ImageColor3 = Theme.Color.TextMuted,
             }),
         }),
-        List = open and React.createElement(RoundedFrame, {
-            Color = Theme.Color.ElementDim,
-            Radius = Theme.Layout.CornerSm,
+        -- list always mounted; clipped by root, height + fade animated
+        List = React.createElement('CanvasGroup', {
+            ref = listRef,
             Position = UDim2.fromOffset(0, 48),
-            Size = UDim2.new(1, 0, 0, listH),
+            Size = UDim2.new(1, 0, 0, 0),
+            BackgroundColor3 = Theme.Color.ElementDim,
+            BorderSizePixel = 0,
+            GroupTransparency = 1,
         }, {
+            Round = React.createElement('UICorner', {
+                CornerRadius = UDim.new(0, Theme.Layout.CornerSm),
+            }),
             Scroll = React.createElement('ScrollingFrame', {
                 Size = UDim2.fromScale(1, 1),
                 BackgroundTransparency = 1,
@@ -125,7 +166,7 @@ local function Dropdown(props)
                 ScrollBarThickness = 2,
                 ScrollBarImageColor3 = Theme.Color.Outline,
             }, rows),
-        }) or nil,
+        }),
     })
 end
 

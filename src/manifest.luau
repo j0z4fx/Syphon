@@ -15,6 +15,7 @@ return {
     'core/Corners',
     'core/Motion',
     'core/Hooks',
+    'core/Drag',
     'core/Library',
 
     'components/registry',

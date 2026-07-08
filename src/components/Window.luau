@@ -11,24 +11,33 @@ local Players = game:GetService('Players')
 
 local TOOLBAR_HEIGHT = 43 -- odd => true vertical center pixel
 
--- one page per tab; crossfades + slides on activate, stays mounted when hidden
+-- one page per tab. On activate (tab open / menu show) the whole page starts
+-- off — faded, scaled down, slid up — and animates to its resting state, the
+-- NeverLose reveal. Stays mounted when hidden.
 local function TabPage(props)
     local React = Env.React
     local ref = React.useRef(nil)
+    local scaleRef = React.useRef(nil)
 
     React.useEffect(function()
         local cg = ref.current
+        local sc = scaleRef.current
         if not cg then return end
         if props.active then
             cg.Visible = true
+            -- reset to "off" then animate in
+            cg.GroupTransparency = 1
+            cg.Position = UDim2.new(0, 0, 0, 18)
+            if sc then sc.Scale = 0.97 end
             Motion.tween(cg, Motion.Smooth, {
                 GroupTransparency = 0,
-                Position = UDim2.fromOffset(0, 0),
+                Position = UDim2.new(0, 0, 0, 0),
             })
+            if sc then Motion.tween(sc, Motion.Smooth, { Scale = 1 }) end
         else
             local t = Motion.tween(cg, Motion.Snappy, {
                 GroupTransparency = 1,
-                Position = UDim2.fromOffset(0, 8),
+                Position = UDim2.new(0, 0, 0, 10),
             })
             if t then
                 t.Completed:Once(function()
@@ -45,7 +54,10 @@ local function TabPage(props)
         BorderSizePixel = 0,
         GroupTransparency = props.active and 0 or 1,
         Visible = props.active,
-    }, props.children)
+    }, {
+        Scale = React.createElement('UIScale', { ref = scaleRef, Scale = 1 }),
+        Body = React.createElement(Env.React.Fragment, nil, props.children),
+    })
 end
 
 -- props: { Size: UDim2?, Position: UDim2?, Visible: boolean?,

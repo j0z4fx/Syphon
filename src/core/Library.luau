@@ -27,7 +27,8 @@ local function makeHost()
     gui.Name = Library.RandomString()
     gui.ResetOnSpawn = false
     gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    gui.IgnoreGuiInset = true -- gui coords == GetMouseLocation coords everywhere
+    -- IgnoreGuiInset=false so AbsolutePosition is inset-excluded, matching
+    -- LocalPlayer:GetMouse() .X/.Y — the environment-independent pairing.
 
     pcall(function()
         if syn and syn.protect_gui then syn.protect_gui(gui) end

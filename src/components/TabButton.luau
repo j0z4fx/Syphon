@@ -1,5 +1,5 @@
 --!nonstrict
--- TabButton — square icon button; animated hover + active state.
+-- TabButton — square icon button; animated hover + active + center press scale.
 local Env = require('core/env')
 local RoundedFrame = require('components/RoundedFrame')
 local Motion = require('core/Motion')
@@ -14,6 +14,7 @@ local function TabButton(props)
     local bgRef = React.useRef(nil)
     local iconRef = React.useRef(nil)
     local scaleRef = React.useRef(nil)
+    local size = props.Size or UDim2.fromOffset(34, 34)
 
     React.useEffect(function()
         local bg, icon = bgRef.current, iconRef.current
@@ -32,28 +33,35 @@ local function TabButton(props)
 
     React.useEffect(function()
         local s = scaleRef.current
-        if s then Motion.tween(s, Motion.Snappy, { Scale = pressed and 0.9 or 1 }) end
+        if s then Motion.tween(s, Motion.Snappy, { Scale = pressed and 0.88 or 1 }) end
     end, { pressed })
 
-    return React.createElement(RoundedFrame, {
-        ref = bgRef,
-        Button = true,
-        Color = props.Active and Theme.Color.Accent or Theme.Color.Surface,
-        Radius = Theme.Layout.Corner,
-        Size = props.Size or UDim2.fromOffset(34, 34),
+    return React.createElement('Frame', {
+        Size = size,
         LayoutOrder = props.LayoutOrder,
-        OnClick = props.OnClick,
-        Handlers = handlers,
+        BackgroundTransparency = 1,
     }, {
-        Scale = React.createElement('UIScale', { ref = scaleRef, Scale = 1 }),
-        Icon = React.createElement('ImageLabel', {
-            ref = iconRef,
+        Btn = React.createElement(RoundedFrame, {
+            ref = bgRef,
+            Button = true,
+            Color = props.Active and Theme.Color.Accent or Theme.Color.Surface,
+            Radius = Theme.Layout.Corner,
             AnchorPoint = Vector2.new(0.5, 0.5),
             Position = UDim2.fromScale(0.5, 0.5),
-            Size = UDim2.fromOffset(18, 18),
-            BackgroundTransparency = 1,
-            Image = props.Image or '',
-            ImageColor3 = props.Active and Theme.Color.Background or Theme.Color.Text,
+            Size = UDim2.fromScale(1, 1),
+            OnClick = props.OnClick,
+            Handlers = handlers,
+        }, {
+            Scale = React.createElement('UIScale', { ref = scaleRef, Scale = 1 }),
+            Icon = React.createElement('ImageLabel', {
+                ref = iconRef,
+                AnchorPoint = Vector2.new(0.5, 0.5),
+                Position = UDim2.fromScale(0.5, 0.5),
+                Size = UDim2.fromOffset(18, 18),
+                BackgroundTransparency = 1,
+                Image = props.Image or '',
+                ImageColor3 = props.Active and Theme.Color.Background or Theme.Color.Text,
+            }),
         }),
     })
 end

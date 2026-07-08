@@ -3,6 +3,8 @@
 -- Registers into Store.Options under props.Flag.
 local Env = require('core/env')
 local RoundedFrame = require('components/RoundedFrame')
+local Motion = require('core/Motion')
+local Hooks = require('core/Hooks')
 
 local UserInputService = game:GetService('UserInputService')
 
@@ -17,6 +19,18 @@ local function Keybind(props)
     local listening, setListening = React.useState(false)
     local keyRef = React.useRef(key)
     keyRef.current = key
+    local chipRef = React.useRef(nil)
+    local hovered, _, handlers = Hooks.useInteractive()
+
+    React.useEffect(function()
+        local chip = chipRef.current
+        if not chip then return end
+        local prop = chip:IsA('ImageLabel') and 'ImageColor3' or 'BackgroundColor3'
+        Motion.tween(chip, Motion.Snappy, {
+            [prop] = listening and Theme.Color.ElementDim
+                or (hovered and Theme.Color.Outline or Theme.Color.Element),
+        })
+    end, { hovered, listening })
 
     local set = React.useCallback(function(k)
         setKey(k)
@@ -67,12 +81,14 @@ local function Keybind(props)
             TextXAlignment = Enum.TextXAlignment.Left,
         }),
         Chip = React.createElement(RoundedFrame, {
+            ref = chipRef,
             Button = true,
             Color = listening and Theme.Color.ElementDim or Theme.Color.Element,
             Radius = Theme.Layout.CornerSm,
             AnchorPoint = Vector2.new(1, 0.5),
             Position = UDim2.new(1, 0, 0.5, 0),
             Size = UDim2.fromOffset(64, 20),
+            Handlers = handlers,
             OnClick = function() setListening(not listening) end,
         }, {
             Label = React.createElement('TextLabel', {

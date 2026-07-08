@@ -1,5 +1,5 @@
 --!nonstrict
--- Button — full-width click button; animated hover tint + press scale.
+-- Button — full-width click button; animated hover tint + center press scale.
 local Env = require('core/env')
 local RoundedFrame = require('components/RoundedFrame')
 local Motion = require('core/Motion')
@@ -29,26 +29,35 @@ local function Button(props)
         if s then Motion.tween(s, Motion.Snappy, { Scale = pressed and 0.97 or 1 }) end
     end, { pressed })
 
-    return React.createElement(RoundedFrame, {
-        ref = bgRef,
-        Button = true,
-        Color = Theme.Color.Element,
-        Radius = Theme.Layout.CornerSm,
-        Size = UDim2.new(1, 0, 0, 30),
+    -- outer cell handles list layout; inner button is centered so UIScale
+    -- scales it around the middle, not the top-left corner
+    return React.createElement('Frame', {
         LayoutOrder = props.LayoutOrder,
-        Handlers = handlers,
-        OnClick = function()
-            if props.Callback then Env.Library:SafeCall(props.Callback) end
-        end,
+        Size = UDim2.new(1, 0, 0, 30),
+        BackgroundTransparency = 1,
     }, {
-        Scale = React.createElement('UIScale', { ref = scaleRef, Scale = 1 }),
-        Text = React.createElement('TextLabel', {
+        Btn = React.createElement(RoundedFrame, {
+            ref = bgRef,
+            Button = true,
+            Color = Theme.Color.Element,
+            Radius = Theme.Layout.CornerSm,
+            AnchorPoint = Vector2.new(0.5, 0.5),
+            Position = UDim2.fromScale(0.5, 0.5),
             Size = UDim2.fromScale(1, 1),
-            BackgroundTransparency = 1,
-            FontFace = Theme.Face.Medium,
-            Text = props.Text or 'Button',
-            TextColor3 = Theme.Color.Text,
-            TextSize = Theme.Text.SizeSml,
+            Handlers = handlers,
+            OnClick = function()
+                if props.Callback then Env.Library:SafeCall(props.Callback) end
+            end,
+        }, {
+            Scale = React.createElement('UIScale', { ref = scaleRef, Scale = 1 }),
+            Text = React.createElement('TextLabel', {
+                Size = UDim2.fromScale(1, 1),
+                BackgroundTransparency = 1,
+                FontFace = Theme.Face.Medium,
+                Text = props.Text or 'Button',
+                TextColor3 = Theme.Color.Text,
+                TextSize = Theme.Text.SizeSml,
+            }),
         }),
     })
 end

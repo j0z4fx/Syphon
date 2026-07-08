@@ -4,8 +4,7 @@
 -- ponytail: no transparency slider; add when something needs it
 local Env = require('core/env')
 local RoundedFrame = require('components/RoundedFrame')
-
-local UserInputService = game:GetService('UserInputService')
+local Drag = require('core/Drag')
 
 local SV_IMAGE = 'rbxassetid://4155801252' -- white->hue / black overlay map
 
@@ -52,38 +51,16 @@ local function ColorPicker(props)
         return function() Store.Options[props.Flag] = nil end
     end, {})
 
-    -- drag helper: track mouse until release, mapping position inside `ref`
-    local function drag(ref, apply)
-        local function step()
-            local gui = ref.current
-            if not gui then return end
-            local m = UserInputService:GetMouseLocation()
-            local fx = math.clamp((m.X - gui.AbsolutePosition.X) / gui.AbsoluteSize.X, 0, 1)
-            local fy = math.clamp((m.Y - gui.AbsolutePosition.Y) / gui.AbsoluteSize.Y, 0, 1)
-            apply(fx, fy)
-        end
-        step()
-        local moveConn, upConn
-        moveConn = UserInputService.InputChanged:Connect(function(io)
-            if io.UserInputType == Enum.UserInputType.MouseMovement then step() end
-        end)
-        upConn = UserInputService.InputEnded:Connect(function(io)
-            if io.UserInputType == Enum.UserInputType.MouseButton1 then
-                moveConn:Disconnect(); upConn:Disconnect()
-            end
-        end)
-    end
-
-    local function applySV(fx, fy)
+    local function applySV(f)
         local t = hsvRef.current
-        local nt = { h = t.h, s = fx, v = 1 - fy }
+        local nt = { h = t.h, s = f.X, v = 1 - f.Y }
         setHsv(nt)
         announce(Color3.fromHSV(nt.h, nt.s, nt.v))
     end
 
-    local function applyHue(fx)
+    local function applyHue(f)
         local t = hsvRef.current
-        local nt = { h = fx, s = t.s, v = t.v }
+        local nt = { h = f.X, s = t.s, v = t.v }
         setHsv(nt)
         announce(Color3.fromHSV(nt.h, nt.s, nt.v))
     end
@@ -127,7 +104,7 @@ local function ColorPicker(props)
             ref = mapRef,
             [React.Event.InputBegan] = function(_, io)
                 if io.UserInputType == Enum.UserInputType.MouseButton1 then
-                    drag(mapRef, applySV)
+                    Drag.begin(mapRef.current, applySV)
                 end
             end,
         }, {
@@ -150,7 +127,7 @@ local function ColorPicker(props)
             ref = hueRef,
             [React.Event.InputBegan] = function(_, io)
                 if io.UserInputType == Enum.UserInputType.MouseButton1 then
-                    drag(hueRef, function(fx) applyHue(fx) end)
+                    Drag.begin(hueRef.current, applyHue)
                 end
             end,
         }, {

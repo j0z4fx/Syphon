@@ -4,6 +4,7 @@
 local Env = require('core/env')
 local Motion = require('core/Motion')
 local Corners = require('core/Corners')
+local Hooks = require('core/Hooks')
 
 -- props: { Text: string, Default: boolean?, Flag: string?, Callback: (boolean) -> ()?, LayoutOrder: number? }
 local function Toggle(props)
@@ -16,6 +17,8 @@ local function Toggle(props)
     valueRef.current = value
     local pillRef = React.useRef(nil)
     local knobRef = React.useRef(nil)
+    local textRef = React.useRef(nil)
+    local hovered, _, handlers = Hooks.useInteractive()
 
     local set = React.useCallback(function(v)
         v = not not v
@@ -34,20 +37,30 @@ local function Toggle(props)
         return function() Store.Toggles[props.Flag] = nil end
     end, {})
 
-    -- NeverLose anim: pill tint + knob slide/opacity, Slowy (0.175s)
+    -- NeverLose anim: pill tint + knob slide/opacity, Slowy (0.175s).
+    -- Off + hover brightens the pill; text brightens on hover.
     React.useEffect(function()
-        local pill, knob = pillRef.current, knobRef.current
-        if not (pill and knob) then return end
-        local prop = pill:IsA('ImageLabel') and 'ImageColor3' or 'BackgroundColor3'
-        Motion.tween(pill, Motion.Slowy, {
-            [prop] = value and Theme.Color.Accent or Theme.Color.Element,
-        })
-        local kprop = knob:IsA('ImageLabel') and 'ImageTransparency' or 'BackgroundTransparency'
-        Motion.tween(knob, Motion.Slowy, {
-            Position = value and UDim2.new(0.7, 0, 0.5, 0) or UDim2.new(0.3, 0, 0.5, 0),
-            [kprop] = value and 0 or 0.5,
-        })
-    end, { value })
+        local pill, knob, text = pillRef.current, knobRef.current, textRef.current
+        if pill then
+            local prop = pill:IsA('ImageLabel') and 'ImageColor3' or 'BackgroundColor3'
+            Motion.tween(pill, Motion.Slowy, {
+                [prop] = value and Theme.Color.Accent
+                    or (hovered and Theme.Color.Outline or Theme.Color.Element),
+            })
+        end
+        if knob then
+            local kprop = knob:IsA('ImageLabel') and 'ImageTransparency' or 'BackgroundTransparency'
+            Motion.tween(knob, Motion.Slowy, {
+                Position = value and UDim2.new(0.7, 0, 0.5, 0) or UDim2.new(0.3, 0, 0.5, 0),
+                [kprop] = value and 0 or 0.5,
+            })
+        end
+        if text then
+            Motion.tween(text, Motion.Snappy, {
+                TextColor3 = hovered and Theme.Color.Text or Theme.Color.TextMuted,
+            })
+        end
+    end, { value, hovered })
 
     local pillSlice = Corners.get(9)
     local knobSlice = Corners.get(7)
@@ -108,13 +121,16 @@ local function Toggle(props)
         BackgroundTransparency = 1,
         Text = '',
         [React.Event.Activated] = function() set(not valueRef.current) end,
+        [React.Event.MouseEnter] = handlers[React.Event.MouseEnter],
+        [React.Event.MouseLeave] = handlers[React.Event.MouseLeave],
     }, {
         Text = React.createElement('TextLabel', {
+            ref = textRef,
             Size = UDim2.new(1, -38, 1, 0),
             BackgroundTransparency = 1,
             FontFace = Theme.Face.Regular,
             Text = props.Text or 'Toggle',
-            TextColor3 = Theme.Color.Text,
+            TextColor3 = Theme.Color.TextMuted,
             TextSize = Theme.Text.SizeSml,
             TextXAlignment = Enum.TextXAlignment.Left,
         }),
