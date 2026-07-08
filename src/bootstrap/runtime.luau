@@ -26,10 +26,12 @@ local function fromGetgenv()
 end
 
 local function fromPackages()
-    local okR,  React       = pcall(require, 'packages/React')
-    local okRR, ReactRoblox = pcall(require, 'packages/ReactRoblox')
-    if okR and okRR and type(React) == 'table' and type(ReactRoblox) == 'table' then
-        return React, ReactRoblox
+    -- Combined bundle returns { React = ..., ReactRoblox = ... } so both share
+    -- one React instance (required for hooks/context to work across them).
+    local ok, bundle = pcall(require, 'packages/ReactLua')
+    if ok and type(bundle) == 'table'
+        and type(bundle.React) == 'table' and type(bundle.ReactRoblox) == 'table' then
+        return bundle.React, bundle.ReactRoblox
     end
 end
 

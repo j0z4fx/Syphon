@@ -28,6 +28,5 @@ return {
     'components/controls/Label',
     'components/controls/Divider',
 
-    'packages/React',
-    'packages/ReactRoblox',
+    'packages/ReactLua',
 }
