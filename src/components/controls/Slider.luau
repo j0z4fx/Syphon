@@ -138,7 +138,9 @@ local function Slider(props)
                 Round = React.createElement('UICorner', { CornerRadius = UDim.new(0, 3) }),
                 Fill = React.createElement('Frame', {
                     ref = fillRef,
-                    Size = UDim2.new(frac, 0, 1, 0),
+                    -- constant initial; width is driven imperatively by the
+                    -- frac effect so it can lerp instead of snapping each render
+                    Size = UDim2.new(0, 0, 1, 0),
                     BackgroundColor3 = Theme.Color.Accent,
                     BorderSizePixel = 0,
                 }),
