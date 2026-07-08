@@ -11,10 +11,12 @@ return {
     'core/env',
     'core/Theme',
     'core/Store',
+    'core/Icons',
     'core/Library',
 
     'components/registry',
     'components/Window',
+    'components/TabButton',
     'components/Tab',
     'components/Groupbox',
 

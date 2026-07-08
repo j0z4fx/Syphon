@@ -32,6 +32,6 @@ return {
     Layout = {
         Padding   = 4,
         RowHeight = 20,
-        Corner    = 0, -- 0 = sharp Linoria-style corners
+        Corner    = 6, -- window + tab button corner radius (px)
     },
 }

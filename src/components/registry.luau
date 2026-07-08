@@ -5,6 +5,7 @@
 -- and a future auto-builder can iterate them.
 return {
     { name = 'Window',      path = 'components/Window',            kind = 'layout'  },
+    { name = 'TabButton',   path = 'components/TabButton',         kind = 'layout'  },
     { name = 'Tab',         path = 'components/Tab',               kind = 'layout'  },
     { name = 'Groupbox',    path = 'components/Groupbox',          kind = 'layout'  },
 

@@ -8,6 +8,7 @@ Env.React       = runtime.React
 Env.ReactRoblox = runtime.ReactRoblox
 Env.Theme       = require('core/Theme')
 Env.Store       = require('core/Store')
+Env.Icons       = require('core/Icons')
 
 local Library = require('core/Library')
 Env.Library   = Library
@@ -17,6 +18,7 @@ Library.ReactRoblox = runtime.ReactRoblox
 Library.Runtime     = runtime
 Library.Theme       = Env.Theme
 Library.Store       = Env.Store
+Library.Icons       = Env.Icons
 
 -- Resolve components from the registry. Drop a file + add a registry line to
 -- extend the library; nothing here needs to change.
