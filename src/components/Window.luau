@@ -84,6 +84,28 @@ local function Window(props)
                     }),
                 }),
             }),
+            DisplayName = React.createElement('TextLabel', {
+                Position = UDim2.new(0, 47, 0.5, -9),
+                Size = UDim2.fromOffset(200, 9),
+                AnchorPoint = Vector2.new(0, 0.5),
+                BackgroundTransparency = 1,
+                Font = Theme.Font,
+                Text = Players.LocalPlayer.DisplayName,
+                TextColor3 = Theme.Color.Text,
+                TextSize = Theme.Text.Size,
+                TextXAlignment = Enum.TextXAlignment.Left,
+            }),
+            Subtext = React.createElement('TextLabel', {
+                Position = UDim2.new(0, 47, 0.5, 8),
+                Size = UDim2.fromOffset(200, 9),
+                AnchorPoint = Vector2.new(0, 0.5),
+                BackgroundTransparency = 1,
+                Font = Theme.Font,
+                Text = 'Premium',
+                TextColor3 = Theme.Color.TextMuted,
+                TextSize = Theme.Text.SizeSml,
+                TextXAlignment = Enum.TextXAlignment.Left,
+            }),
         }),
     })
 end
