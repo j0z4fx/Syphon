@@ -1,18 +1,18 @@
 --!nonstrict
--- Pointer helpers. Uses LocalPlayer:GetMouse() .X/.Y which are inset-excluded,
--- matching AbsolutePosition of an IgnoreGuiInset=false ScreenGui on every client
--- (avoids the GetMouseLocation/inset mismatch that varies by executor).
+-- Pointer helpers. UserInputService:GetMouseLocation() reports in the same
+-- space as GuiObject.AbsolutePosition (verified: matches under both
+-- IgnoreGuiInset states), so no inset correction is needed.
 local UserInputService = game:GetService('UserInputService')
-local Mouse = game:GetService('Players').LocalPlayer:GetMouse()
 
 local Drag = {}
 
 -- Fraction (0..1 each axis) of the mouse within `frame`, clamped.
 function Drag.fraction(frame)
+    local m = UserInputService:GetMouseLocation()
     local ap, as = frame.AbsolutePosition, frame.AbsoluteSize
     return Vector2.new(
-        as.X > 0 and math.clamp((Mouse.X - ap.X) / as.X, 0, 1) or 0,
-        as.Y > 0 and math.clamp((Mouse.Y - ap.Y) / as.Y, 0, 1) or 0
+        as.X > 0 and math.clamp((m.X - ap.X) / as.X, 0, 1) or 0,
+        as.Y > 0 and math.clamp((m.Y - ap.Y) / as.Y, 0, 1) or 0
     )
 end
 
