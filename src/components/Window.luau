@@ -87,18 +87,7 @@ local function Window(props)
         Content = React.createElement('Frame', {
             Size = UDim2.new(1, 0, 1, -TOOLBAR_HEIGHT),
             BackgroundTransparency = 1,
-        }, {
-            TabBar = React.createElement('Frame', {
-                Position = UDim2.fromOffset(0, 8),
-                Size = UDim2.new(1, 0, 0, 34),
-                BackgroundTransparency = 1,
-            }, tabChildren),
-            Body = React.createElement('Frame', {
-                Position = UDim2.fromOffset(0, 50),
-                Size = UDim2.new(1, 0, 1, -50),
-                BackgroundTransparency = 1,
-            }, props.children),
-        }),
+        }, props.children),
         Toolbar = React.createElement('Frame', {
             AnchorPoint = Vector2.new(0, 1),
             Position = UDim2.fromScale(0, 1),
@@ -154,6 +143,12 @@ local function Window(props)
                 TextStrokeTransparency = 1,
                 TextXAlignment = Enum.TextXAlignment.Left,
             }),
+            TabBar = React.createElement('Frame', {
+                AnchorPoint = Vector2.new(0.5, 0.5),
+                Position = UDim2.fromScale(0.5, 0.5),
+                Size = UDim2.new(1, -120, 1, 0), -- keep clear of avatar/name on the left
+                BackgroundTransparency = 1,
+            }, tabChildren),
         }),
     })
 end
