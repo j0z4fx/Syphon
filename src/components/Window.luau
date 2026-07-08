@@ -4,7 +4,7 @@ local Env = require('core/env')
 
 local UserInputService = game:GetService('UserInputService')
 
-local TOOLBAR_HEIGHT = 42
+local TOOLBAR_HEIGHT = 43 -- odd => true vertical center pixel
 
 -- props: { Size: UDim2?, Position: UDim2?, Visible: boolean?, children: ... }
 local function Window(props)
