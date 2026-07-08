@@ -4,6 +4,8 @@ local Env = require('core/env')
 
 local UserInputService = game:GetService('UserInputService')
 
+local TOOLBAR_HEIGHT = 28
+
 -- props: { Size: UDim2?, Position: UDim2?, Visible: boolean?, children: ... }
 local function Window(props)
     local React = Env.React
@@ -46,7 +48,19 @@ local function Window(props)
         BorderSizePixel = 0,
         Visible = props.Visible ~= false,
         [React.Event.InputBegan] = onInput,
-    }, props.children)
+    }, {
+        Content = React.createElement('Frame', {
+            Size = UDim2.new(1, 0, 1, -TOOLBAR_HEIGHT),
+            BackgroundTransparency = 1,
+        }, props.children),
+        Toolbar = React.createElement('Frame', {
+            AnchorPoint = Vector2.new(0, 1),
+            Position = UDim2.fromScale(0, 1),
+            Size = UDim2.new(1, 0, 0, TOOLBAR_HEIGHT),
+            BackgroundColor3 = Theme.Color.Surface,
+            BorderSizePixel = 0,
+        }),
+    })
 end
 
 return Window
