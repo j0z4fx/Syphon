@@ -2,7 +2,15 @@
 -- Design tokens. Pure data — no instances, no logic. Components read from here
 -- so a reskin is a single-file change. Extend with new tokens as needed.
 return {
-    Font = Enum.Font.Code,
+    Font = Enum.Font.Code, -- legacy fallback
+
+    -- Builder Extended (create.roblox.com/store/asset/16658237174)
+    FontId = 'rbxassetid://16658237174',
+    Face = {
+        Regular = Font.new('rbxassetid://16658237174', Enum.FontWeight.Regular),
+        Medium  = Font.new('rbxassetid://16658237174', Enum.FontWeight.Medium),
+        Bold    = Font.new('rbxassetid://16658237174', Enum.FontWeight.Bold),
+    },
 
     Color = {
         Background = Color3.fromRGB(20, 20, 20),
@@ -18,6 +26,7 @@ return {
     Text = {
         Size    = 14,
         SizeSml = 13,
+        SizeXs  = 11,
     },
 
     Layout = {
