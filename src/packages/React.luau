@@ -1,0 +1,12 @@
+--!nonstrict
+-- Placeholder for the prebuilt React (react-lua) single-file bundle.
+--
+-- Replace this file's contents with a bundled build of jsdotlua/react-lua's
+-- `React` package (e.g. produced with darklua's bundler so all relative
+-- requires are inlined into one module that `return`s the React table).
+--
+-- Alternatively, inject at runtime before loading Syphon:
+--   getgenv().SyphonReact = <React table>
+--
+-- Until then the library loads for inspection but Library:Mount() will error.
+error('Syphon: React bundle not installed — see packages/README.md', 0)
